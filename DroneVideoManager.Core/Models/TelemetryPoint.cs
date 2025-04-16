@@ -13,7 +13,8 @@ namespace DroneVideoManager.Core.Models
         public double Speed { get; set; }
         public double Heading { get; set; }
         
-        // Navigation property
-        public virtual DroneMetadata DroneMetadata { get; set; }
+        // Navigation properties
+        public virtual DroneMetadata DroneMetadata { get; set; } = null!;
+        public virtual CameraMetadata? CameraMetadata { get; set; }
     }
 } 

@@ -7,6 +7,7 @@ using DroneVideoManager.Data;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
 using FFMpegCore;
+using System.IO.Abstractions;
 
 namespace DroneVideoManager.UI
 {
@@ -61,6 +62,7 @@ namespace DroneVideoManager.UI
             services.AddSingleton<IProjectService, ProjectService>();
             services.AddSingleton<IFileSystemWatcherService, FileSystemWatcherService>();
             services.AddScoped<IVideoMetadataService, VideoMetadataService>();
+            services.AddSingleton<IFileSystem, FileSystem>();
 
             // Register main window
             services.AddTransient<MainWindow>();

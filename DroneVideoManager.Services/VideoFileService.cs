@@ -131,34 +131,13 @@ namespace DroneVideoManager.Services
                     }
                 }
 
-                // Check for DJI SRT file
-                string srtPath = Path.ChangeExtension(video.FilePath, ".SRT");
-                if (IOFile.Exists(srtPath))
-                {
-                    video.DroneMetadata = await ExtractDroneMetadataAsync(srtPath, video);
-                }
-
-                await _dbContext.SaveChangesAsync();
+                // Extract metadata using the VideoMetadataService
+                await _metadataService.ExtractAndSaveMetadataAsync(video);
             }
             catch (Exception)
             {
                 // Log error but don't throw - this is background processing
             }
-        }
-
-        private async Task<DroneMetadata> ExtractDroneMetadataAsync(string srtPath, VideoFile videoFile)
-        {
-            var metadata = new DroneMetadata
-            {
-                VideoFile = videoFile,
-                FlightDate = IOFile.GetCreationTime(srtPath),
-                TelemetryPoints = new List<TelemetryPoint>()
-            };
-
-            // Read and parse SRT file
-            string[] lines = await IOFile.ReadAllLinesAsync(srtPath);
-            // TODO: Implement SRT parsing logic
-            return metadata;
         }
 
         public async Task<IEnumerable<VideoFile>> SearchVideosAsync(string searchText)

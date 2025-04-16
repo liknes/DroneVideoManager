@@ -11,6 +11,7 @@ namespace DroneVideoManager.Data
         public DbSet<VideoProject> VideoProjects { get; set; }
         public DbSet<DroneMetadata> DroneMetadata { get; set; }
         public DbSet<TelemetryPoint> TelemetryPoints { get; set; }
+        public DbSet<CameraMetadata> CameraMetadata { get; set; }
         public DbSet<VideoTag> VideoTags { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<VideoMetadata> VideoMetadata { get; set; }
@@ -58,6 +59,13 @@ namespace DroneVideoManager.Data
                 .HasOne(t => t.DroneMetadata)
                 .WithMany(d => d.TelemetryPoints)
                 .HasForeignKey(t => t.DroneMetadataId);
+
+            // Configure CameraMetadata
+            modelBuilder.Entity<CameraMetadata>()
+                .HasOne(c => c.TelemetryPoint)
+                .WithOne(t => t.CameraMetadata)
+                .HasForeignKey<CameraMetadata>(c => c.TelemetryPointId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             base.OnModelCreating(modelBuilder);
         }
