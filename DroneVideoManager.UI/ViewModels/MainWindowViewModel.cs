@@ -10,6 +10,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.IO;
+using DroneVideoManager.UI.Views;
 
 namespace DroneVideoManager.UI.ViewModels
 {
@@ -255,33 +256,54 @@ namespace DroneVideoManager.UI.ViewModels
 
                 if (folderDialog.ShowDialog() == true)
                 {
-                    IsImporting = true;
-                    ImportStatus = "Scanning folder...";
+                    var progressWindow = new ImportProgressWindow
+                    {
+                        Owner = Application.Current.MainWindow,
+                        Status = "Preparing to import folder..."
+                    };
 
                     try
                     {
                         _loggingService.LogInformation($"Starting folder import: {folderDialog.FolderName}");
-                        var folder = await _folderService.ImportFolderAsync(folderDialog.FolderName);
                         
-                        await LoadFolders();  // Refresh the folders list
-                        await LoadRecentVideos();  // Refresh the videos list
+                        // Show progress window
+                        progressWindow.Show();
+
+                        // Create progress handler
+                        var progress = new Progress<(int Processed, int Total)>(tuple => 
+                        {
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                progressWindow.Progress = tuple.Total == 0 ? 0 : (tuple.Processed * 100.0) / tuple.Total;
+                                progressWindow.DetailedStatus = $"Processing files: {tuple.Processed}/{tuple.Total}";
+                            });
+                        });
+
+                        var folder = await _folderService.ImportFolderAsync(folderDialog.FolderName, progress);
                         
-                        ImportStatus = "Folder import completed successfully";
+                        await LoadFolders();
+                        await LoadRecentVideos();
+                        
+                        progressWindow.Status = "Import completed successfully";
+                        progressWindow.Progress = 100;
                         _loggingService.LogInformation("Folder import completed");
+
+                        await Task.Delay(2000); // Show completion for 2 seconds
                     }
                     catch (Exception ex)
                     {
                         _loggingService.LogError("Error during folder import", ex);
+                        progressWindow.Status = "Error importing folder";
                         MessageBox.Show(
                             $"Error importing folder:\n\n{ex.Message}\n\nCheck the log file for more details.",
                             "Import Error",
                             MessageBoxButton.OK,
                             MessageBoxImage.Error);
-                        ImportStatus = "Error importing folder";
                     }
-
-                    await Task.Delay(3000); // Show status for 3 seconds
-                    ImportStatus = string.Empty;
+                    finally
+                    {
+                        progressWindow.Close();
+                    }
                 }
             }
             catch (Exception ex)
@@ -292,10 +314,6 @@ namespace DroneVideoManager.UI.ViewModels
                     "Import Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
-            }
-            finally
-            {
-                IsImporting = false;
             }
         }
 

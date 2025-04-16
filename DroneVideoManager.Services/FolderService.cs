@@ -36,7 +36,7 @@ namespace DroneVideoManager.Services
                 .ToListAsync();
         }
 
-        public async Task<Folder> ImportFolderAsync(string folderPath)
+        public async Task<Folder> ImportFolderAsync(string folderPath, IProgress<(int Processed, int Total)>? progress = null)
         {
             try
             {
@@ -49,7 +49,6 @@ namespace DroneVideoManager.Services
                     throw new DirectoryNotFoundException($"Directory not found: {folderPath}");
                 }
 
-                // Create and save the folder entry first
                 var folder = new Folder
                 {
                     Name = directoryInfo.Name,
@@ -59,13 +58,52 @@ namespace DroneVideoManager.Services
                     IsWatched = false
                 };
 
-                _loggingService.LogInformation($"Adding folder to database: {folder.Name}");
                 _dbContext.Folders.Add(folder);
                 await _dbContext.SaveChangesAsync();
-                _loggingService.LogInformation($"Folder saved with ID: {folder.Id}");
 
-                // Start importing files immediately instead of background
-                await ScanFolderForVideosAsync(folder.Id);
+                var videoExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) 
+                    { ".mp4", ".mov", ".avi", ".mkv" };
+
+                // Get all files but exclude those in Proxy folders
+                var files = Directory.EnumerateFiles(folder.Path, "*.*", SearchOption.AllDirectories)
+                    .Where(f => 
+                        !f.Contains(Path.DirectorySeparatorChar + "Proxy" + Path.DirectorySeparatorChar) && // Exclude files in Proxy folders
+                        !f.Contains(Path.DirectorySeparatorChar + "Proxy\\") && // Additional check for Windows paths
+                        !f.Contains("/Proxy/") && // Additional check for forward slashes
+                        videoExtensions.Contains(Path.GetExtension(f)))
+                    .ToList();
+
+                _loggingService.LogInformation($"Found {files.Count} video files (excluding Proxy folder contents)");
+
+                int processedCount = 0;
+                int totalCount = files.Count;
+                
+                progress?.Report((0, totalCount));
+
+                foreach (var filePath in files)
+                {
+                    try
+                    {
+                        var video = await _videoFileService.ImportVideoFileAsync(filePath);
+                        if (video != null && video.FolderId != folder.Id)
+                        {
+                            video.FolderId = folder.Id;
+                            _dbContext.VideoFiles.Update(video);
+                            await _dbContext.SaveChangesAsync();
+                        }
+                        processedCount++;
+                        progress?.Report((processedCount, totalCount));
+                        _loggingService.LogInformation($"Processed {processedCount}/{totalCount}: {Path.GetFileName(filePath)}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _loggingService.LogError($"Error processing file: {filePath}", ex);
+                    }
+                }
+
+                folder.LastScannedDate = DateTime.Now;
+                await _dbContext.SaveChangesAsync();
+                _loggingService.LogInformation($"Completed folder scan. Processed {processedCount} files.");
 
                 return folder;
             }

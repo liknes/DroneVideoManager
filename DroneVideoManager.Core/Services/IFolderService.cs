@@ -6,7 +6,7 @@ namespace DroneVideoManager.Core.Services
 {
     public interface IFolderService
     {
-        Task<Folder> ImportFolderAsync(string folderPath);
+        Task<Folder> ImportFolderAsync(string folderPath, IProgress<(int Processed, int Total)>? progress = null);
         Task<IEnumerable<Folder>> GetAllFoldersAsync();
         Task<Folder> GetFolderByIdAsync(int folderId);
         Task DeleteFolderAsync(int folderId);
