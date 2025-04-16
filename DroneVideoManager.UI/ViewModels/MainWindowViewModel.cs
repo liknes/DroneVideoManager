@@ -102,6 +102,7 @@ namespace DroneVideoManager.UI.ViewModels
         public ICommand DeleteProjectCommand { get; }
         public ICommand AddToProjectCommand { get; }
         public ICommand RefreshCommand { get; }
+        public ICommand OpenSettingsCommand { get; }
 
         public MainWindowViewModel(
             IVideoFileService videoFileService,
@@ -126,6 +127,7 @@ namespace DroneVideoManager.UI.ViewModels
             DeleteProjectCommand = new RelayCommand(async () => await DeleteProject(), () => SelectedProject != null);
             AddToProjectCommand = new RelayCommand(async () => await AddToProject(), () => SelectedVideo != null && SelectedProject != null);
             RefreshCommand = new RelayCommand(async () => await LoadData());
+            OpenSettingsCommand = new RelayCommand(OpenSettings);
 
             _ = LoadData();
         }
@@ -376,6 +378,20 @@ namespace DroneVideoManager.UI.ViewModels
             {
                 await _projectService.AddVideoToProjectAsync(SelectedProject.Id, SelectedVideo.Id);
                 await LoadProjectVideos();
+            }
+        }
+
+        private async Task OpenSettings()
+        {
+            var settingsWindow = new ImportSettingsWindow
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            if (settingsWindow.ShowDialog() == true)
+            {
+                // Settings were saved
+                _loggingService.LogInformation("Import settings updated");
             }
         }
 
