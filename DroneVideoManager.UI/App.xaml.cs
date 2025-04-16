@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using System.IO;
 using FFMpegCore;
 using System.IO.Abstractions;
+using DroneVideoManager.UI.Services;
+using DroneVideoManager.UI.ViewModels;
 
 namespace DroneVideoManager.UI
 {
@@ -78,6 +80,9 @@ namespace DroneVideoManager.UI
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            // Apply light theme by default
+            ThemeManager.ApplyLightTheme();
 
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             mainWindow.Show();

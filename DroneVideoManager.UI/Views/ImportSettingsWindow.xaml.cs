@@ -1,4 +1,5 @@
 using System.Windows;
+using DroneVideoManager.UI.Services;
 
 namespace DroneVideoManager.UI.Views
 {
@@ -15,6 +16,16 @@ namespace DroneVideoManager.UI.Views
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
+            // Apply theme settings
+            if (ImportSettings.UseDarkTheme)
+            {
+                ThemeManager.ApplyDarkTheme();
+            }
+            else
+            {
+                ThemeManager.ApplyLightTheme();
+            }
+
             DialogResult = true;
             Close();
         }
@@ -31,5 +42,6 @@ namespace DroneVideoManager.UI.Views
         public bool ImportTelemetryData { get; set; } = true;
         public bool CalculateSpeedAndHeading { get; set; } = true;
         public bool ImportCameraMetadata { get; set; } = true;
+        public bool UseDarkTheme { get; set; } = true;
     }
 } 
