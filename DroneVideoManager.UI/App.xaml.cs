@@ -6,6 +6,7 @@ using DroneVideoManager.Services;
 using DroneVideoManager.Data;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
+using FFMpegCore;
 
 namespace DroneVideoManager.UI
 {
@@ -59,9 +60,17 @@ namespace DroneVideoManager.UI
             services.AddSingleton<IFolderService, FolderService>();
             services.AddSingleton<IProjectService, ProjectService>();
             services.AddSingleton<IFileSystemWatcherService, FileSystemWatcherService>();
+            services.AddScoped<IVideoMetadataService, VideoMetadataService>();
 
             // Register main window
             services.AddTransient<MainWindow>();
+
+            // Configure FFmpeg
+            FFMpegCore.GlobalFFOptions.Configure(new FFMpegCore.FFOptions
+            {
+                BinaryFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg"),
+                TemporaryFilesFolder = Path.GetTempPath()
+            });
         }
 
         protected override void OnStartup(StartupEventArgs e)

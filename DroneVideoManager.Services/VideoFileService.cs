@@ -19,11 +19,16 @@ namespace DroneVideoManager.Services
         private readonly List<VideoFile> _videos = new();
         private int _nextId = 1;
         private readonly ILoggingService _loggingService;
+        private readonly IVideoMetadataService _metadataService;
 
-        public VideoFileService(DroneVideoDbContext dbContext, ILoggingService loggingService)
+        public VideoFileService(
+            DroneVideoDbContext dbContext, 
+            ILoggingService loggingService,
+            IVideoMetadataService metadataService)
         {
             _dbContext = dbContext;
             _loggingService = loggingService;
+            _metadataService = metadataService;
         }
 
         public async Task<IEnumerable<VideoFile>> GetRecentVideosAsync(int count)
@@ -96,9 +101,8 @@ namespace DroneVideoManager.Services
                     throw new Exception("Failed to save video to database", ex);
                 }
 
-                // Queue metadata extraction for background processing
-                _loggingService.LogInformation("Queuing metadata extraction");
-                _ = Task.Run(() => ExtractMetadataAsync(video.Id));
+                // After saving the video file, extract metadata
+                await _metadataService.ExtractAndSaveMetadataAsync(video);
 
                 return video;
             }

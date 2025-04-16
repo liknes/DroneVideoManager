@@ -13,6 +13,7 @@ namespace DroneVideoManager.Data
         public DbSet<TelemetryPoint> TelemetryPoints { get; set; }
         public DbSet<VideoTag> VideoTags { get; set; }
         public DbSet<Tag> Tags { get; set; }
+        public DbSet<VideoMetadata> VideoMetadata { get; set; }
 
         public DroneVideoDbContext(DbContextOptions<DroneVideoDbContext> options)
             : base(options)

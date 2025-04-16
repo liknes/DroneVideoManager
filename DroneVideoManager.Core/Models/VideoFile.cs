@@ -34,5 +34,6 @@ namespace DroneVideoManager.Core.Models
         public virtual ICollection<VideoProject> Projects { get; set; } = new List<VideoProject>();
         public virtual DroneMetadata? DroneMetadata { get; set; }
         public virtual Folder? Folder { get; set; }
+        public virtual VideoMetadata? Metadata { get; set; }
     }
 } 

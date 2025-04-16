@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.IO;
 using DroneVideoManager.UI.Views;
+using FFMpegCore;
 
 namespace DroneVideoManager.UI.ViewModels
 {
